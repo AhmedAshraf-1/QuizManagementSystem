@@ -1,1 +1,49 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class Quiz {
+    private String name;
+    private List<Question> questions;
+
+    public Quiz(String name) {
+        this.name = name;
+        this.questions = new ArrayList<>();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Question> getQuestions() {
+        return questions;
+    }
+
+    public void addQuestion(Question question) {
+        questions.add(question);
+    }
+
+    public void startQuiz() {
+        System.out.println("\nStarting quiz: " + name);
+        int score = 0;
+
+        Scanner scanner = new Scanner(System.in);
+
+        for (Question question : questions) {
+            question.displayQuestion();
+            System.out.print("Your answer: ");
+            String userAnswer = scanner.nextLine();
+
+            if (question.validateAnswer(userAnswer)) {
+                System.out.println("Correct!");
+                score += question.getPoints();
+            } else {
+                System.out.println("Wrong!");
+            }
+        }
+
+        System.out.println("\nQuiz complete!");
+        System.out.println("Your total score: " + score);
+    }
+}
 
