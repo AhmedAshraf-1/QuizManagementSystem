@@ -1,0 +1,28 @@
+public class TrueFalseQuestion extends Question {
+    private boolean correctAnswer;
+
+    public TrueFalseQuestion(String questionText, int points, boolean correctAnswer) {
+        super(questionText, points);
+        this.correctAnswer = correctAnswer;
+    }
+
+    public boolean isCorrectAnswer() {
+        return correctAnswer;
+    }
+
+    @Override
+    public boolean validateAnswer(String answer) {
+        if (answer.equalsIgnoreCase("true")) {
+            return correctAnswer == true;
+        } else if (answer.equalsIgnoreCase("false")) {
+            return correctAnswer == false;
+        }
+        return false;
+    }
+
+    @Override
+    public void displayQuestion() {
+        System.out.println("Question: " + getQuestionText());
+        System.out.println("Options: True / False");
+    }
+}
