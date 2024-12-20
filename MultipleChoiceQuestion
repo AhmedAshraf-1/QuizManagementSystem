@@ -1,1 +1,41 @@
+import javax.swing.*;
+import java.util.List;
 
+public class MultipleChoiceQuestion extends Question {
+    private List<String> options;
+    private int correctOption; // Index of the correct option (0-based index)
+
+    public MultipleChoiceQuestion(String questionText, int points, List<String> options, int correctOption) {
+        super(questionText, points);
+        this.options = options;
+        this.correctOption = correctOption;
+    }
+
+    public List<String> getOptions() {
+        return options;
+    }
+
+    public int getCorrectOption() {
+        return correctOption;
+    }
+
+    @Override
+    public void displayQuestion() {
+        StringBuilder display = new StringBuilder(getQuestionText() + "\n");
+        for (int i = 0; i < options.size(); i++) {
+            display.append((i + 1)).append(". ").append(options.get(i)).append("\n"); // Display as 1-based index
+        }
+        JOptionPane.showMessageDialog(null, display.toString(), "Question", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    @Override
+    public boolean validateAnswer(String answer) {
+        if (answer.matches("\\d+")) { // Ensures the answer is numeric
+            int selectedOption = Integer.parseInt(answer) - 1; // Convert to 0-based index
+            if (selectedOption >= 0 && selectedOption < options.size()) {
+                return selectedOption == correctOption;
+            }
+        }
+        return false; // Invalid input
+    }
+}
