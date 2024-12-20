@@ -1,1 +1,358 @@
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class QuizManagementGUI {
+    private static List<Quiz> quizzes = new ArrayList<>();
+    private static List<Student> students = new ArrayList<>();
+    private static int currentQuestionIndex = 0;
+    private static int score = 0;
+    private static Quiz currentQuiz;
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new QuizManagementGUI().showMainMenu());
+    }
+
+    public void showMainMenu() {
+        String[] options = {"Quiz Manager", "Student Manager", "Exit"};
+        int choice = JOptionPane.showOptionDialog(
+                null,
+                "Choose an option:",
+                "Quiz Management System",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        if (choice == 0) {
+            showQuizManagerMenu();
+        } else if (choice == 1) {
+            showStudentManagerMenu();
+        } else {
+            System.exit(0);
+        }
+    }
+
+    public void showQuizManagerMenu() {
+        String[] options = {"Create Quiz", "Add Question to Quiz", "Start Quiz", "Back to Main Menu"};
+        int choice = JOptionPane.showOptionDialog(
+                null,
+                "Choose an option:",
+                "Quiz Manager",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        if (choice == 0) {
+            createQuiz();
+        } else if (choice == 1) {
+            addQuestionToQuiz();
+        } else if (choice == 2) {
+            startQuiz();
+        } else {
+            showMainMenu();
+        }
+    }
+
+    public void showStudentManagerMenu() {
+        String[] options = {"Add Student", "View Students", "Back to Main Menu"};
+        int choice = JOptionPane.showOptionDialog(
+                null,
+                "Choose an option:",
+                "Student Manager",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        if (choice == 0) {
+            addStudent();
+        } else if (choice == 1) {
+            viewStudents();
+        } else {
+            showMainMenu();
+        }
+    }
+
+    private void addStudent() {
+        String studentID = JOptionPane.showInputDialog("Enter Student ID:");
+        if (studentID == null || studentID.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Student ID cannot be empty.");
+            showStudentManagerMenu();
+            return;
+        }
+
+        String studentName = JOptionPane.showInputDialog("Enter Student Name:");
+        if (studentName == null || studentName.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Student Name cannot be empty.");
+            showStudentManagerMenu();
+            return;
+        }
+
+        students.add(new Student(studentID, studentName, 0));
+        JOptionPane.showMessageDialog(null, "Student added successfully!");
+        showStudentManagerMenu();
+    }
+
+    private void viewStudents() {
+        if (students.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No students available.");
+        } else {
+            StringBuilder studentList = new StringBuilder("Students:\n");
+            for (Student student : students) {
+                studentList.append("ID: ").append(student.getStudentID())
+                        .append(", Name: ").append(student.getName())
+                        .append(", Grade: ").append(student.getGrade()).append("\n");
+            }
+            JOptionPane.showMessageDialog(null, studentList.toString());
+        }
+        showStudentManagerMenu();
+    }
+
+    // Other existing methods for quiz management remain unchanged
+    // createQuiz(), addQuestionToQuiz(), startQuiz(), and runQuizGUI()...
+
+    private void createQuiz() {
+        String quizName = JOptionPane.showInputDialog("Enter quiz name:");
+        if (quizName != null && !quizName.trim().isEmpty()) {
+            quizzes.add(new Quiz(quizName));
+            JOptionPane.showMessageDialog(null, "Quiz created successfully!");
+        }
+        showQuizManagerMenu();
+    }
+
+    private void addQuestionToQuiz() {
+        if (quizzes.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No quizzes available. Please create a quiz first.");
+            showQuizManagerMenu();
+            return;
+        }
+
+        StringBuilder quizList = new StringBuilder("Select a quiz:\n");
+        for (int i = 0; i < quizzes.size(); i++) {
+            quizList.append(i + 1).append(": ").append(quizzes.get(i).getName()).append("\n");
+        }
+
+        String input = JOptionPane.showInputDialog(quizList.toString());
+        int quizIndex;
+        try {
+            quizIndex = Integer.parseInt(input) - 1;
+            if (quizIndex < 0 || quizIndex >= quizzes.size()) {
+                throw new NumberFormatException();
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Invalid selection. Please try again.");
+            showQuizManagerMenu();
+            return;
+        }
+
+        String[] questionTypes = {"Multiple Choice", "True/False", "Essay"};
+        int questionType = JOptionPane.showOptionDialog(
+                null,
+                "Select the type of question:",
+                "Question Type",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                questionTypes,
+                questionTypes[0]
+        );
+
+        switch (questionType) {
+            case 0: // Multiple Choice
+                addMultipleChoiceQuestion(quizIndex);
+                break;
+            case 1: // True/False
+                addTrueFalseQuestion(quizIndex);
+                break;
+            case 2: // Essay
+                addEssayQuestion(quizIndex);
+                break;
+            default:
+                showQuizManagerMenu();
+        }
+    }
+
+    private void addMultipleChoiceQuestion(int quizIndex) {
+        String questionText = JOptionPane.showInputDialog("Enter the question text:");
+        if (questionText == null || questionText.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Question text cannot be empty.");
+            showQuizManagerMenu();
+            return;
+        }
+
+        String optionsInput = JOptionPane.showInputDialog("Enter the options (comma-separated):");
+        if (optionsInput == null || optionsInput.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Options cannot be empty.");
+            showQuizManagerMenu();
+            return;
+        }
+        List<String> options = List.of(optionsInput.split(","));
+
+        String correctAnswerInput = JOptionPane.showInputDialog("Enter the index of the correct answer (1-based):");
+        int correctOption;
+        try {
+            correctOption = Integer.parseInt(correctAnswerInput) - 1; // Convert to 0-based index
+            if (correctOption < 0 || correctOption >= options.size()) {
+                throw new NumberFormatException();
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Invalid index for correct answer. Please try again.");
+            showQuizManagerMenu();
+            return;
+        }
+
+        int points;
+        try {
+            points = Integer.parseInt(JOptionPane.showInputDialog("Enter points for this question:"));
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Invalid points. Please enter a number.");
+            showQuizManagerMenu();
+            return;
+        }
+
+        quizzes.get(quizIndex).addQuestion(new MultipleChoiceQuestion(questionText, points, options, correctOption));
+        JOptionPane.showMessageDialog(null, "Multiple-choice question added successfully!");
+        showQuizManagerMenu();
+    }
+
+    private void addTrueFalseQuestion(int quizIndex) {
+        String questionText = JOptionPane.showInputDialog("Enter the question text:");
+        if (questionText == null || questionText.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Question text cannot be empty.");
+            showQuizManagerMenu();
+            return;
+        }
+
+        String[] options = {"True", "False"};
+        int correctAnswerOption = JOptionPane.showOptionDialog(
+                null,
+                "Select the correct answer:",
+                "Correct Answer",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        if (correctAnswerOption == -1) {
+            JOptionPane.showMessageDialog(null, "No option selected. Returning to menu.");
+            showQuizManagerMenu();
+            return;
+        }
+
+        boolean correctAnswer = (correctAnswerOption == 0);
+
+        int points;
+        try {
+            points = Integer.parseInt(JOptionPane.showInputDialog("Enter points for this question:"));
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Invalid points. Please enter a number.");
+            showQuizManagerMenu();
+            return;
+        }
+
+        quizzes.get(quizIndex).addQuestion(new TrueFalseQuestion(questionText, points, correctAnswer));
+        JOptionPane.showMessageDialog(null, "True/False question added successfully!");
+        showQuizManagerMenu();
+    }
+
+    private void addEssayQuestion(int quizIndex) {
+        String questionText = JOptionPane.showInputDialog("Enter the question text:");
+        if (questionText == null || questionText.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Question text cannot be empty.");
+            showQuizManagerMenu();
+            return;
+        }
+
+        String correctAnswer = JOptionPane.showInputDialog("Enter the correct answer for evaluation:");
+        if (correctAnswer == null || correctAnswer.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Correct answer cannot be empty.");
+            showQuizManagerMenu();
+            return;
+        }
+
+        int points;
+        try {
+            points = Integer.parseInt(JOptionPane.showInputDialog("Enter points for this question:"));
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Invalid points. Please enter a number.");
+            showQuizManagerMenu();
+            return;
+        }
+
+        quizzes.get(quizIndex).addQuestion(new EssayQuestion(questionText, points, correctAnswer));
+        JOptionPane.showMessageDialog(null, "Essay question added successfully!");
+        showQuizManagerMenu();
+    }
+
+    private void startQuiz() {
+        if (quizzes.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No quizzes available. Please create a quiz first.");
+            showQuizManagerMenu();
+            return;
+        }
+
+        StringBuilder quizList = new StringBuilder("Select a quiz to start:\n");
+        for (int i = 0; i < quizzes.size(); i++) {
+            quizList.append(i + 1).append(": ").append(quizzes.get(i).getName()).append("\n");
+        }
+
+        String input = JOptionPane.showInputDialog(quizList.toString());
+        int quizIndex;
+        try {
+            quizIndex = Integer.parseInt(input) - 1;
+            if (quizIndex < 0 || quizIndex >= quizzes.size()) {
+                throw new NumberFormatException();
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Invalid selection. Please try again.");
+            showQuizManagerMenu();
+            return;
+        }
+
+        currentQuiz = quizzes.get(quizIndex);
+        currentQuestionIndex = 0;
+        score = 0;
+
+        runQuizGUI();
+    }
+    private void runQuizGUI() {
+        if (currentQuestionIndex < currentQuiz.getQuestions().size()) {
+            Question currentQuestion = currentQuiz.getQuestions().get(currentQuestionIndex);
+
+            // Display the question
+            currentQuestion.displayQuestion();
+
+            // Prompt the user for their answer
+            String userAnswer = JOptionPane.showInputDialog("Your answer:");
+
+            // Validate the answer
+            if (currentQuestion.validateAnswer(userAnswer)) {
+                JOptionPane.showMessageDialog(null, "Correct!");
+                score += currentQuestion.getPoints();
+            } else {
+                JOptionPane.showMessageDialog(null, "Incorrect. The correct answer was: "
+                        + (currentQuestion instanceof EssayQuestion
+                        ? ((EssayQuestion) currentQuestion).getCorrectAnswer()
+                        : "N/A"));
+            }
+
+            currentQuestionIndex++;
+            runQuizGUI(); // Recursively move to the next question
+        } else {
+            // Quiz is finished
+            JOptionPane.showMessageDialog(null, "Quiz finished! Your score: " + score + "/" + currentQuiz.getQuestions().size());
+            showQuizManagerMenu();
+        }
+    } }
 
