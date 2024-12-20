@@ -1,1 +1,272 @@
+public class Student {
+    private String studentID;
+    private String name;
+    private int grade;
+
+    public Student(String studentID, String name) {
+        this.studentID = studentID;
+        this.name = name;
+        this.grade = 0; // Default grade
+    }
+
+    public String getStudentID() {
+        return studentID;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getGrade() {
+        return grade;
+    }
+
+    public void setGrade(int grade) {
+        this.grade = grade;
+    }
+}
+////////////////////////////////////
+public abstract class Question {
+    private String questionText;
+    private int points;
+
+    public Question(String questionText, int points) {
+        this.questionText = questionText;
+        this.points = points;
+    }
+
+    public String getQuestionText() {
+        return questionText;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public abstract boolean validateAnswer(String answer);
+    public abstract void displayQuestion();
+}
+/////////////////////////
+import java.util.List;
+
+public class MultipleChoiceQuestion extends Question {
+    private List<String> options;
+    private int correctAnswerIndex;
+
+    public MultipleChoiceQuestion(String questionText, int points, List<String> options, int correctAnswerIndex) {
+        super(questionText, points);
+        this.options = options;
+        this.correctAnswerIndex = correctAnswerIndex;
+    }
+
+    @Override
+    public boolean validateAnswer(String answer) {
+        try {
+            int selectedIndex = Integer.parseInt(answer) - 1;
+            return selectedIndex == correctAnswerIndex;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public void displayQuestion() {
+        System.out.println("Question: " + getQuestionText());
+        for (int i = 0; i < options.size(); i++) {
+            System.out.println((i + 1) + ". " + options.get(i));
+        }
+    }
+}
+////////////////////////
+public class TrueFalseQuestion extends Question {
+    private boolean correctAnswer;
+
+    public TrueFalseQuestion(String questionText, int points, boolean correctAnswer) {
+        super(questionText, points);
+        this.correctAnswer = correctAnswer;
+    }
+
+    @Override
+    public boolean validateAnswer(String answer) {
+        return (answer.equalsIgnoreCase("true") && correctAnswer) || (answer.equalsIgnoreCase("false") && !correctAnswer);
+    }
+
+    @Override
+    public void displayQuestion() {
+        System.out.println("Question: " + getQuestionText());
+        System.out.println("Options: True / False");
+    }
+}
+/////////////////////////////////
+public class EssayQuestion extends Question {
+
+    public EssayQuestion(String questionText, int points) {
+        super(questionText, points);
+    }
+
+    @Override
+    public boolean validateAnswer(String answer) {
+        return !answer.trim().isEmpty(); // Ensures an answer is provided
+    }
+
+    @Override
+    public void displayQuestion() {
+        System.out.println("Essay Question: " + getQuestionText());
+    }
+}
+//////////////////////////////
+import java.util.ArrayList;
+import java.util.List;
+
+public class Quiz {
+    private String quizName;
+    private List<Question> questions;
+
+    public Quiz(String quizName) {
+        this.quizName = quizName;
+        this.questions = new ArrayList<>();
+    }
+
+    public void addQuestion(Question question) {
+        questions.add(question);
+    }
+
+    public void startQuiz(Student student) {
+        if (student == null) {
+            System.out.println("No student registered! Register a student to take the quiz.");
+            return;
+        }
+
+        System.out.println("Starting quiz: " + quizName);
+        int totalScore = 0;
+
+        for (Question question : questions) {
+            question.displayQuestion();
+            System.out.print("Your answer: ");
+            String answer = System.console().readLine(); // For console-based input
+            if (question.validateAnswer(answer)) {
+                totalScore += question.getPoints();
+                System.out.println("Correct!");
+            } else {
+                System.out.println("Incorrect.");
+            }
+        }
+
+        student.setGrade(totalScore);
+        System.out.println("Quiz complete! " + student.getName() + "'s Total Score: " + totalScore);
+    }
+}
+////////////////////////////
+import java.util.Scanner;
+
+public class QuizManagementGUI {
+    private static Student currentStudent = null;
+    private static Quiz currentQuiz = null;
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        boolean running = true;
+
+        while (running) {
+            System.out.println("\n=== Quiz Management System ===");
+            System.out.println("1. Register Student");
+            System.out.println("2. Create Quiz");
+            System.out.println("3. Add Question to Quiz");
+            System.out.println("4. Start Quiz");
+            System.out.println("5. Exit");
+            System.out.print("Choose an option: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter Student ID: ");
+                    String studentID = scanner.nextLine();
+                    System.out.print("Enter Student Name: ");
+                    String name = scanner.nextLine();
+                    currentStudent = new Student(studentID, name);
+                    System.out.println("Student Registered Successfully!");
+                    break;
+
+                case 2:
+                    System.out.print("Enter Quiz Name: ");
+                    String quizName = scanner.nextLine();
+                    currentQuiz = new Quiz(quizName);
+                    System.out.println("Quiz Created Successfully!");
+                    break;
+
+                case 3:
+                    if (currentQuiz == null) {
+                        System.out.println("No quiz created. Create a quiz first.");
+                        break;
+                    }
+                    System.out.println("1. Multiple Choice");
+                    System.out.println("2. True/False");
+                    System.out.println("3. Essay");
+                    System.out.print("Choose question type: ");
+                    int questionType = scanner.nextInt();
+                    scanner.nextLine(); // Consume newline
+
+                    System.out.print("Enter Question Text: ");
+                    String questionText = scanner.nextLine();
+                    System.out.print("Enter Points: ");
+                    int points = scanner.nextInt();
+                    scanner.nextLine(); // Consume newline
+
+                    switch (questionType) {
+                        case 1:
+                            System.out.print("Enter number of options: ");
+                            int numOptions = scanner.nextInt();
+                            scanner.nextLine();
+                            List<String> options = new ArrayList<>();
+                            for (int i = 0; i < numOptions; i++) {
+                                System.out.print("Option " + (i + 1) + ": ");
+                                options.add(scanner.nextLine());
+                            }
+                            System.out.print("Enter correct option (1-" + numOptions + "): ");
+                            int correctOption = scanner.nextInt();
+                            scanner.nextLine();
+                            currentQuiz.addQuestion(new MultipleChoiceQuestion(questionText, points, options, correctOption - 1));
+                            break;
+
+                        case 2:
+                            System.out.print("Enter correct answer (true/false): ");
+                            boolean correctAnswer = scanner.nextBoolean();
+                            scanner.nextLine();
+                            currentQuiz.addQuestion(new TrueFalseQuestion(questionText, points, correctAnswer));
+                            break;
+
+                        case 3:
+                            currentQuiz.addQuestion(new EssayQuestion(questionText, points));
+                            break;
+
+                        default:
+                            System.out.println("Invalid question type.");
+                    }
+                    System.out.println("Question added successfully!");
+                    break;
+
+                case 4:
+                    if (currentQuiz == null) {
+                        System.out.println("No quiz created. Create a quiz first.");
+                    } else if (currentStudent == null) {
+                        System.out.println("No student registered. Register a student first.");
+                    } else {
+                        currentQuiz.startQuiz(currentStudent);
+                    }
+                    break;
+
+                case 5:
+                    running = false;
+                    System.out.println("Exiting system. Goodbye!");
+                    break;
+
+                default:
+                    System.out.println("Invalid option.");
+            }
+        }
+
+        scanner.close();
+    }
+}
 
