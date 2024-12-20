@@ -1,1 +1,64 @@
+import javax.swing.JOptionPane;
+import java.util.ArrayList;
+import java.util.List;
+
+public class QuizManager {
+    private List<Quiz> quizzes = new ArrayList<>();
+    private List<Student> students = new ArrayList<>();
+
+    public void addQuiz(Quiz quiz) {
+        quizzes.add(quiz);
+    }
+
+    public void addStudent(String studentID, String studentName, int grade) {
+        students.add(new Student(studentID, studentName, grade));
+    }
+
+    public void startQuiz(String studentID, String quizName) {
+        Quiz quiz = findQuizByName(quizName);
+        if (quiz == null) {
+            System.out.println("Quiz not found.");
+            return;
+        }
+
+        int score = 0;
+        for (Question question : quiz.getQuestions()) {
+            question.displayQuestion();
+            String studentAnswer = "Some Answer"; // Replace with real input logic
+            if (question.validateAnswer(studentAnswer)) {
+                score += question.getPoints();
+            }
+        }
+
+        addGrade(studentID, score);
+        System.out.println("Quiz Completed. Score: " + score);
+    }
+
+    public Quiz findQuizByName(String name) {
+        return quizzes.stream().filter(q -> q.getName().equals(name)).findFirst().orElse(null);
+    }
+
+    public void addGrade(String studentID, int grade) {
+        for (Student student : students) {
+            if (student.getStudentID().equals(studentID)) {
+                student.setGrade(grade);
+                return;
+            }
+        }
+    }
+
+    public void displayStudentGrades() {
+        StringBuilder builder = new StringBuilder("Student Grades:\n");
+        for (Student student : students) {
+            builder.append("ID: ").append(student.getStudentID())
+                    .append(", Name: ").append(student.getName())
+                    .append(", Grade: ").append(student.getGrade()).append("\n");
+        }
+        JOptionPane.showMessageDialog(null, builder.toString());
+    }
+
+    public List<Quiz> getQuizzes() {
+        return quizzes;
+    }
+}
 
